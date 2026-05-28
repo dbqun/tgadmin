@@ -75,6 +75,11 @@ OpenTG Admin 是一个面向 Telegram 生态的后台管理界面，用于集中
 ## 开源协议
 
 MIT
-
-![截图](./images/1总览.png)
+<p align="center">
+  <img src="./images/1总览.png" width="100%">
+</p>
+<hr style="margin:40px 0;">
+<p align="center">
+  <img src="./images/2频道群机器人.png" width="100%">
+</p>
 
