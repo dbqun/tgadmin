@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenTG Admin Mock</title>
+  <style>
+    :root {
+      --side: #001529;
+      --side-soft: #0b2138;
+      --primary: #1677ff;
+      --bg: #f5f5f5;
+      --card: #ffffff;
+      --line: #f0f0f0;
+      --text: #1f1f1f;
+      --muted: #8c8c8c;
+      --green: #52c41a;
+      --red: #ff4d4f;
+      --orange: #faad14;
+      --purple: #722ed1;
+      --cyan: #13c2c2;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-size: 14px; }
+    .layout { min-height: 100vh; display: grid; grid-template-columns: 220px minmax(0, 1fr); }
+    .sider { background: var(--side); color: #fff; min-height: 100vh; position: sticky; top: 0; align-self: start; }
+    .brand { padding: 16px; border-bottom: 1px solid rgba(255,255,255,.08); cursor: pointer; }
+    .brand h1 { margin: 0; font-size: 20px; line-height: 1.2; }
+    .brand p { margin: 6px 0 0; color: rgba(255,255,255,.65); font-size: 13px; }
+    .menu { padding: 8px 0 24px; }
+    .menu-group { margin-top: 8px; }
+    .menu-title { padding: 10px 24px 6px; color: rgba(255,255,255,.48); font-size: 12px; }
+    .menu-item { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 24px; color: rgba(255,255,255,.84); cursor: pointer; border-right: 3px solid transparent; }
+    .menu-item:hover { background: rgba(255,255,255,.08); }
+    .menu-item.active { background: var(--primary); color: #fff; border-right-color: #69b1ff; }
+    .main { min-width: 0; }
+    .topbar { height: 64px; background: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--line); }
+    .topbar .left { display: flex; align-items: center; gap: 12px; color: #595959; }
+    .topbar .right { display: flex; align-items: center; gap: 8px; }
+    .btn { border: 1px solid #d9d9d9; background: #fff; color: rgba(0,0,0,.88); border-radius: 6px; padding: 7px 14px; cursor: pointer; line-height: 1.2; }
+    .btn:hover { color: var(--primary); border-color: var(--primary); }
+    .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn.danger { color: var(--red); border-color: #ffccc7; }
+    .content { padding: 16px; display: grid; gap: 16px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,.03); overflow: hidden; }
+    .card-head { min-height: 48px; padding: 0 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .card-title { font-weight: 600; }
+    .card-body { padding: 16px; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .input, .select { border: 1px solid #d9d9d9; border-radius: 6px; height: 34px; padding: 0 11px; background: #fff; min-width: 180px; }
+    .select { min-width: 120px; }
+    .radio { display: inline-flex; border: 1px solid #d9d9d9; border-radius: 6px; overflow: hidden; background: #fff; }
+    .radio span { padding: 7px 12px; border-right: 1px solid #d9d9d9; cursor: pointer; }
+    .radio span:last-child { border-right: 0; }
+    .radio span.active { background: var(--primary); color: #fff; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .stat { cursor: pointer; transition: box-shadow .16s ease, transform .16s ease; }
+    .stat:hover { box-shadow: 0 5px 16px rgba(0,0,0,.08); transform: translateY(-1px); }
+    .stat .label { color: var(--muted); margin-bottom: 8px; }
+    .stat .value { font-size: 30px; font-weight: 500; line-height: 1; }
+    .stat .hint { color: var(--muted); margin-top: 8px; font-size: 12px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .chart { height: 280px; display: flex; align-items: flex-end; gap: 10px; padding: 12px 8px 0; border-top: 1px dashed var(--line); }
+    .bar { flex: 1; min-width: 10px; background: linear-gradient(180deg, #69b1ff, #1677ff); border-radius: 5px 5px 0 0; position: relative; }
+    .bar::after { content: attr(data-label); position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); color: var(--muted); font-size: 11px; white-space: nowrap; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    th { background: #fafafa; font-weight: 600; color: #595959; }
+    tr:hover td { background: #fafcff; }
+    .avatar { width: 40px; height: 40px; border-radius: 8px; display: inline-grid; place-items: center; color: #fff; background: #1677ff; margin-right: 8px; vertical-align: middle; font-weight: 700; }
+    .stack { display: inline-flex; flex-direction: column; gap: 2px; vertical-align: middle; min-width: 0; }
+    .stack small { color: var(--muted); }
+    .tag { display: inline-flex; align-items: center; height: 22px; border-radius: 4px; padding: 0 7px; font-size: 12px; background: #f5f5f5; border: 1px solid #d9d9d9; color: #595959; }
+    .tag.green { color: #389e0d; background: #f6ffed; border-color: #b7eb8f; }
+    .tag.blue { color: #0958d9; background: #e6f4ff; border-color: #91caff; }
+    .tag.red { color: #cf1322; background: #fff1f0; border-color: #ffa39e; }
+    .tag.orange { color: #d46b08; background: #fff7e6; border-color: #ffd591; }
+    .tag.purple { color: #531dab; background: #f9f0ff; border-color: #d3adf7; }
+    .muted { color: var(--muted); }
+    .drawer { position: fixed; inset: 0; display: none; z-index: 40; }
+    .drawer.open { display: block; }
+    .drawer-mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); }
+    .drawer-panel { position: absolute; top: 0; right: 0; width: min(980px, 92vw); height: 100%; background: #fff; box-shadow: -6px 0 24px rgba(0,0,0,.12); display: grid; grid-template-rows: 56px 1fr; }
+    .drawer-head { padding: 0 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; font-weight: 600; }
+    .drawer-body { padding: 16px; overflow: auto; display: grid; gap: 16px; }
+    .desc { display: grid; grid-template-columns: 140px 1fr 140px 1fr; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+    .desc div { padding: 10px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-height: 40px; }
+    .desc div:nth-child(4n) { border-right: 0; }
+    .desc .k { background: #fafafa; color: #595959; font-weight: 500; }
+    .page { display: none; }
+    .page.active { display: grid; gap: 16px; }
+    @media (max-width: 1000px) {
+      .layout { grid-template-columns: 1fr; }
+      .sider { position: relative; min-height: auto; }
+      .menu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .menu-title { grid-column: 1 / -1; }
+      .stats, .grid-2 { grid-template-columns: 1fr; }
+      .topbar { height: auto; padding: 12px 16px; align-items: flex-start; gap: 12px; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sider">
+      <div class="brand" data-nav="dashboard">
+        <h1>OpenTG Admin</h1>
+        <p>演示运营后台</p>
+      </div>
+      <nav class="menu">
+        <div class="menu-item active" data-nav="dashboard">📊 总览</div>
+        <div class="menu-group">
+          <div class="menu-title">群组</div>
+          <div class="menu-item" data-nav="items">📦 频道/群/机器人</div>
+          <div class="menu-item" data-nav="tools">🔎 搜索工具</div>
+          <div class="menu-item" data-nav="videos">🎬 视频采集源</div>
+          <div class="menu-item" data-nav="keywords">🔥 热搜词</div>
+        </div>
+        <div class="menu-group">
+          <div class="menu-title">用户</div>
+          <div class="menu-item" data-nav="users">👤 用户</div>
+          <div class="menu-item" data-nav="logs">🧾 搜索记录</div>
+          <div class="menu-item" data-nav="referrals">💰 推荐返佣</div>
+          <div class="menu-item" data-nav="withdrawals">🏦 提现请求</div>
+        </div>
+        <div class="menu-group">
+          <div class="menu-title">设置</div>
+          <div class="menu-item" data-nav="filters">🧱 前台过滤词</div>
+          <div class="menu-item" data-nav="debug">🧪 搜索调参</div>
+          <div class="menu-item" data-nav="categories">🧩 分类</div>
+          <div class="menu-item" data-nav="tags">🏷 Tags</div>
+        </div>
+      </nav>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="left">
+          <strong id="pageTitle">总览</strong>
+          <span class="muted">Mock data · offline demo</span>
+        </div>
+        <div class="right">
+          <button class="btn">同步缓存</button>
+          <button class="btn">导出 CSV</button>
+          <button class="btn primary">新增</button>
+          <button class="btn">退出</button>
+        </div>
+      </header>
+      <section class="content">
+        <div class="page active" id="page-dashboard">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">运营概览</div>
+              <select class="select"><option>近 7 天</option><option>近 14 天</option><option>近 30 天</option></select>
+            </div>
+            <div class="card-body stats">
+              <div class="card stat"><div class="card-body"><div class="label">用户总数</div><div class="value">18,426</div><div class="hint">今日 +312</div></div></div>
+              <div class="card stat"><div class="card-body"><div class="label">条目总数</div><div class="value">52,918</div><div class="hint">待审核 146</div></div></div>
+              <div class="card stat"><div class="card-body"><div class="label">今日搜索量</div><div class="value">9,734</div><div class="hint">转化率 18.4%</div></div></div>
+              <div class="card stat"><div class="card-body"><div class="label">视频源</div><div class="value">238</div><div class="hint">活跃 217</div></div></div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-head"><div class="card-title">搜索趋势</div><span class="tag blue">realtime</span></div>
+              <div class="card-body"><div class="chart" id="searchChart"></div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div class="card-title">Item 趋势</div><span class="tag green">healthy</span></div>
+              <div class="card-body"><div class="chart" id="itemChart"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="page-items">
+          <div class="card">
+            <div class="card-head"><div class="card-title">频道/群/机器人（收录条目）</div><button class="btn primary">新增条目</button></div>
+            <div class="card-body">
+              <div class="toolbar">
+                <div class="radio"><span class="active">全部</span><span>pending</span><span>approved</span><span>rejected</span></div>
+                <select class="select"><option>全部类型</option><option>group</option><option>channel</option><option>bot</option></select>
+                <input class="input" placeholder="title / description / link" />
+                <button class="btn">搜索</button>
+                <button class="btn">批量导入</button>
+              </div>
+              <table id="itemsTable"></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="page-tools">
+          <div class="card">
+            <div class="card-head"><div class="card-title">搜索工具（独立管理）</div><button class="btn primary">新增工具</button></div>
+            <div class="card-body">
+              <div class="toolbar">
+                <div class="radio"><span class="active">active</span><span>disabled</span><span>全部</span></div>
+                <input class="input" placeholder="标题 / 描述 / 链接 / username" />
+                <button class="btn">搜索</button>
+              </div>
+              <table id="toolsTable"></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="page-videos">
+          <div class="card">
+            <div class="card-head"><div class="card-title">视频采集源管理</div><button class="btn primary">新增采集源</button></div>
+            <div class="card-body">
+              <div class="toolbar">
+                <div class="radio"><span class="active">全部</span><span>active</span><span>disabled</span></div>
+                <input class="input" placeholder="群名 / username / 描述 / 链接" />
+                <button class="btn">搜索</button>
+              </div>
+              <table id="videosTable"></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="page-users">
+          <div class="card">
+            <div class="card-head"><div class="card-title">用户</div><button class="btn">刷新</button></div>
+            <div class="card-body">
+              <div class="toolbar"><input class="input" placeholder="按用户名 / 昵称 / Telegram ID 搜索" /><button class="btn">搜索</button></div>
+              <table id="usersTable"></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="page-logs">
+          <div class="card">
+            <div class="card-head"><div class="card-title">搜索记录</div><span class="tag orange">sample</span></div>
+            <div class="card-body">
+              <div class="toolbar"><input class="input" placeholder="关键词" /><select class="select"><option>近 1 天</option><option>近 7 天</option><option>近 30 天</option></select><button class="btn">筛选</button></div>
+              <table id="logsTable"></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="page-referrals">
+          <div class="card">
+            <div class="card-head"><div class="card-title">推荐返佣</div><button class="btn">结算批次</button></div>
+            <div class="card-body"><table id="referralsTable"></table></div>
+          </div>
+        </div>
+
+        <div class="page" id="page-withdrawals">
+          <div class="card">
+            <div class="card-head"><div class="card-title">提现请求</div><button class="btn">导出</button></div>
+            <div class="card-body">
+              <div class="toolbar"><select class="select"><option>pending</option><option>approved</option><option>rejected</option></select><button class="btn">筛选</button></div>
+              <table id="withdrawalsTable"></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="page-keywords">
+          <div class="card"><div class="card-head"><div class="card-title">热搜词</div></div><div class="card-body"><table id="keywordsTable"></table></div></div>
+        </div>
+        <div class="page" id="page-filters">
+          <div class="card"><div class="card-head"><div class="card-title">前台过滤词</div><button class="btn primary">新增关键词</button></div><div class="card-body"><table id="filtersTable"></table></div></div>
+        </div>
+        <div class="page" id="page-debug">
+          <div class="card">
+            <div class="card-head"><div class="card-title">搜索调参</div></div>
+            <div class="card-body">
+              <div class="toolbar"><input class="input" value="AI 视频" /><select class="select"><option>all</option><option>group</option></select><button class="btn primary">调试</button></div>
+              <div class="grid-2">
+                <div class="card"><div class="card-head"><div class="card-title">查询解析</div></div><div class="card-body"><span class="tag blue">ai</span> <span class="tag blue">video</span> <span class="tag purple">telegram</span></div></div>
+                <div class="card"><div class="card-head"><div class="card-title">混排结果</div></div><div class="card-body muted">sample_size: 10 / total: 318 · score mode: weighted</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="page" id="page-categories">
+          <div class="card"><div class="card-head"><div class="card-title">分类</div><button class="btn primary">新增分类</button></div><div class="card-body"><table id="categoriesTable"></table></div></div>
+        </div>
+        <div class="page" id="page-tags">
+          <div class="card"><div class="card-head"><div class="card-title">Tags（基于标题+描述分词）</div><button class="btn">重建标签</button></div><div class="card-body"><table id="tagsTable"></table></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="drawer" id="detailDrawer">
+    <div class="drawer-mask" data-close></div>
+    <div class="drawer-panel">
+      <div class="drawer-head"><span>采集详情</span><button class="btn" data-close>关闭</button></div>
+      <div class="drawer-body">
+        <div class="desc">
+          <div class="k">ID</div><div>#128</div><div class="k">username</div><div>@sample_source</div>
+          <div class="k">状态</div><div><span class="tag green">active</span></div><div class="k">采集上限</div><div>800</div>
+          <div class="k">链接</div><div>https://t.me/sample_source</div><div class="k">最近入库</div><div>2026-05-28 11:23</div>
+        </div>
+        <div class="card"><div class="card-head"><div class="card-title">最近执行记录</div></div><div class="card-body"><table id="jobsTable"></table></div></div>
+        <div class="card"><div class="card-head"><div class="card-title">采集数据</div></div><div class="card-body"><table id="messagesTable"></table></div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const names = ["星链快讯", "Open Chat Hub", "Daily Bot Lab", "数码观察站", "Crypto Radar", "Cloud Notes", "开发者日报", "Movie Stream Index", "Video Scout", "Resource Nest"];
+    const categories = ["热门推荐", "资源分享", "编程技术", "学习成长", "影视动漫", "加密货币", "闲聊交友", "工具效率"];
+    const statuses = ["approved", "pending", "active", "disabled", "done", "failed"];
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const n = (min, max) => Math.floor(min + Math.random() * (max - min + 1));
+    const date = () => `2026-05-${String(n(10,28)).padStart(2,"0")} ${String(n(0,23)).padStart(2,"0")}:${String(n(0,59)).padStart(2,"0")}`;
+    const tag = (text, cls="blue") => `<span class="tag ${cls}">${text}</span>`;
+    const rows = (count, fn) => Array.from({ length: count }, (_, i) => fn(i));
+    const renderTable = (id, headers, body) => {
+      document.getElementById(id).innerHTML = `<thead><tr>${headers.map(h => `<th style="${h.w ? `width:${h.w}` : ""}">${h.t}</th>`).join("")}</tr></thead><tbody>${body.join("")}</tbody>`;
+    };
+    const avatar = (name, i) => `<span class="avatar" style="background:hsl(${(i * 47) % 360} 72% 48%)">${name.slice(0,1)}</span>`;
+    const titleCell = (name, sub, i) => `${avatar(name, i)}<span class="stack"><strong>${name}</strong><small>${sub}</small></span>`;
+
+    function buildCharts() {
+      const s = document.getElementById("searchChart");
+      const it = document.getElementById("itemChart");
+      for (let i = 0; i < 14; i++) {
+        s.innerHTML += `<div class="bar" data-label="${i + 1}" style="height:${n(28, 96)}%"></div>`;
+        it.innerHTML += `<div class="bar" data-label="${i + 1}" style="height:${n(18, 86)}%;background:linear-gradient(180deg,#95de64,#52c41a)"></div>`;
+      }
+    }
+
+    function buildTables() {
+      renderTable("itemsTable",
+        [{t:"ID",w:"72px"},{t:"标题",w:"280px"},{t:"类型",w:"90px"},{t:"分类",w:"120px"},{t:"人数",w:"100px"},{t:"状态",w:"110px"},{t:"更新时间",w:"170px"},{t:"操作",w:"180px"}],
+        rows(10, i => {
+          const name = pick(names);
+          const type = pick(["group","channel","bot"]);
+          const status = pick(["approved","approved","pending"]);
+          return `<tr><td>${1001+i}</td><td>${titleCell(name, `https://t.me/${name.toLowerCase().replaceAll(" ","_")}`, i)}</td><td>${tag(type, type==="bot"?"purple":"blue")}</td><td>${pick(categories)}</td><td>${n(0,98000).toLocaleString()}</td><td>${tag(status, status==="approved"?"green":"orange")}</td><td>${date()}</td><td><button class="btn">编辑</button> <button class="btn danger">删除</button></td></tr>`;
+        })
+      );
+      renderTable("toolsTable",
+        [{t:"ID",w:"72px"},{t:"工具",w:"300px"},{t:"跳转链接"},{t:"排序",w:"90px"},{t:"状态",w:"110px"},{t:"操作",w:"160px"}],
+        rows(8, i => `<tr><td>${220+i}</td><td>${titleCell(pick(["TG Finder","Group Lens","Bot Scout","Channel Atlas"]), "@tool_" + n(10,99), i)}</td><td>https://example.org/go/${i}</td><td>${n(1,99)}</td><td>${tag(pick(["active","active","disabled"]), i%4===0?"orange":"green")}</td><td><button class="btn">刷新Meta</button></td></tr>`)
+      );
+      renderTable("videosTable",
+        [{t:"ID",w:"72px"},{t:"群/频道",w:"280px"},{t:"链接",w:"240px"},{t:"状态",w:"110px"},{t:"已采集",w:"90px"},{t:"最新视频",w:"170px"},{t:"错误"},{t:"操作",w:"250px"}],
+        rows(10, i => `<tr class="open-drawer"><td>${80+i}</td><td>${titleCell(pick(["Video Index Lab","短视频精选","素材采集站","Media Harvester"]), "@source_" + n(100,999), i)}</td><td>https://t.me/source_${n(100,999)}</td><td>${tag(i%6===0?"disabled":"active", i%6===0?"orange":"green")}</td><td>${n(30,4200)}</td><td>${date()}</td><td>${i%5===0 ? "rate limit warning" : "-"}</td><td><button class="btn">立即执行</button> <button class="btn">设置上限</button></td></tr>`)
+      );
+      renderTable("usersTable",
+        [{t:"Telegram ID",w:"130px"},{t:"用户",w:"260px"},{t:"积分",w:"90px"},{t:"VIP",w:"80px"},{t:"状态",w:"110px"},{t:"创建时间",w:"170px"},{t:"操作"}],
+        rows(10, i => `<tr><td>${n(1000000,9999999)}</td><td>${titleCell(pick(["Ada","Lin","Neo","Mira","Kai","Tom"]), "@user_" + n(1000,9999), i)}</td><td>${n(0,5200)}</td><td>${i%4===0?"是":"否"}</td><td>${tag(i%9===0?"banned":"normal", i%9===0?"red":"green")}</td><td>${date()}</td><td><button class="btn">调积分</button> <button class="btn">封禁</button></td></tr>`)
+      );
+      renderTable("logsTable",
+        [{t:"ID",w:"80px"},{t:"关键词"},{t:"用户",w:"160px"},{t:"结果数",w:"90px"},{t:"时间",w:"170px"}],
+        rows(12, i => `<tr><td>${4400+i}</td><td>${pick(["AI","电影","加密货币","资源","设计","Python","兼职","视频"])}</td><td>@user_${n(100,999)}</td><td>${n(0,380)}</td><td>${date()}</td></tr>`)
+      );
+      renderTable("referralsTable",
+        [{t:"ID",w:"80px"},{t:"邀请人"},{t:"来源用户"},{t:"类型",w:"120px"},{t:"金额",w:"100px"},{t:"状态",w:"100px"},{t:"时间"}],
+        rows(8, i => `<tr><td>${900+i}</td><td>@owner_${i}</td><td>@guest_${n(10,99)}</td><td>${pick(["signup","search"])}</td><td>${(Math.random()*3).toFixed(4)} U</td><td>${tag("settled","green")}</td><td>${date()}</td></tr>`)
+      );
+      renderTable("withdrawalsTable",
+        [{t:"ID",w:"80px"},{t:"用户"},{t:"金额",w:"100px"},{t:"钱包"},{t:"状态",w:"110px"},{t:"创建时间",w:"170px"},{t:"操作",w:"170px"}],
+        rows(8, i => `<tr><td>${700+i}</td><td>@wallet_${i}</td><td>${n(50,240)} U</td><td>TRC20-${n(100000,999999)}</td><td>${tag(i%3===0?"pending":"approved", i%3===0?"orange":"green")}</td><td>${date()}</td><td><button class="btn">通过</button> <button class="btn danger">拒绝</button></td></tr>`)
+      );
+      renderTable("keywordsTable", [{t:"关键词"},{t:"次数",w:"120px"},{t:"窗口",w:"120px"}], rows(12, () => `<tr><td>${pick(["AI","空投","视频","设计","求职","Netflix","资料","Python"])}</td><td>${n(20,1600)}</td><td>近 7 天</td></tr>`));
+      renderTable("filtersTable", [{t:"关键词"},{t:"状态",w:"120px"},{t:"备注"},{t:"更新时间",w:"170px"}], rows(8, () => `<tr><td>${pick(["spam-token","blocked-word","低质广告","重复灌水"])}</td><td>${tag("active","green")}</td><td>demo only</td><td>${date()}</td></tr>`));
+      renderTable("categoriesTable", [{t:"ID",w:"80px"},{t:"分类"},{t:"slug"},{t:"排序",w:"90px"},{t:"条目数",w:"90px"},{t:"状态",w:"100px"}], categories.map((c, i) => `<tr><td>${i+1}</td><td>🧩 ${c}</td><td>${c.toLowerCase().replaceAll(" ","-")}</td><td>${i*10}</td><td>${n(100,9000)}</td><td>${tag("active","green")}</td></tr>`));
+      renderTable("tagsTable", [{t:"Tag"},{t:"Item Count",w:"130px"},{t:"示例"}], rows(12, () => `<tr><td>#${pick(["ai","movie","crypto","tool","career","design","bot","cloud"])}</td><td>${n(20,980)}</td><td>${pick(names)}</td></tr>`));
+      renderTable("jobsTable", [{t:"任务ID",w:"100px"},{t:"状态",w:"120px"},{t:"请求人"},{t:"请求时间"},{t:"汇总"}], rows(5, i => `<tr><td>${310+i}</td><td>${tag(i===1?"failed":"done", i===1?"red":"green")}</td><td>admin-web</td><td>${date()}</td><td>入库 ${n(3,80)} / 跳过 ${n(0,12)}</td></tr>`));
+      renderTable("messagesTable", [{t:"视频标题"},{t:"文案"},{t:"发布时间",w:"170px"}], rows(6, () => `<tr><td>${pick(["每日精选视频","频道更新摘要","素材合集","公开预告片"])}</td><td>这是一段演示文案，用于开源项目截图。</td><td>${date()}</td></tr>`));
+    }
+
+    function navTo(id) {
+      document.querySelectorAll(".menu-item").forEach(x => x.classList.toggle("active", x.dataset.nav === id));
+      document.querySelectorAll(".page").forEach(x => x.classList.toggle("active", x.id === `page-${id}`));
+      const active = document.querySelector(`.menu-item[data-nav="${id}"]`);
+      document.getElementById("pageTitle").textContent = active ? active.textContent.replace(/^[^ ]+ /, "") : "总览";
+    }
+
+    document.querySelectorAll("[data-nav]").forEach(el => el.addEventListener("click", () => navTo(el.dataset.nav)));
+    document.addEventListener("click", (e) => {
+      if (e.target.closest(".open-drawer")) document.getElementById("detailDrawer").classList.add("open");
+      if (e.target.closest("[data-close]")) document.getElementById("detailDrawer").classList.remove("open");
+    });
+
+    buildCharts();
+    buildTables();
+  </script>
+</body>
+</html>
